@@ -22,6 +22,11 @@ export interface Task {
   month: number; // 0-11
 }
 
+export interface MonthlyReview {
+  achievements: string;
+  nextPlan: string;
+}
+
 export interface DayPlan {
   day: number;
   tasks: Task[];
