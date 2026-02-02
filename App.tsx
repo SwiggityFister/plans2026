@@ -10,9 +10,9 @@ import {
   Clock,
   ChevronRight,
   ChevronLeft,
-  Search,
   Home,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Check
 } from 'lucide-react';
 import { TaskStatus, TaskPriority, Task, MonthlyReview } from './types';
 import { MONTHS, WEEKDAYS } from './constants';
@@ -114,24 +114,23 @@ export default function App() {
     };
   }, [monthTasks]);
 
-  // Calendar Helper Logic for 2026
-  const calendarDays = useMemo(() => {
-    const year = 2026;
-    const firstDayOfMonth = new Date(year, currentMonth, 1).getDay(); // 0 is Sun
-    const daysInMonth = new Date(year, currentMonth + 1, 0).getDate();
-    
-    // Adjust for Monday start: 0(Sun) -> 6, 1(Mon) -> 0...
-    const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-    
-    const blanks = Array(adjustedFirstDay).fill(null);
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    return [...blanks, ...days];
+  const daysInCurrentMonth = useMemo(() => {
+    return new Date(2026, currentMonth + 1, 0).getDate();
   }, [currentMonth]);
 
+  const calendarDays = useMemo(() => {
+    const year = 2026;
+    const firstDayOfMonth = new Date(year, currentMonth, 1).getDay();
+    const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+    const blanks = Array(adjustedFirstDay).fill(null);
+    const days = Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1);
+    return [...blanks, ...days];
+  }, [currentMonth, daysInCurrentMonth]);
+
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#FDFCFB] text-slate-800 font-sans overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#FDFCFB] text-slate-800 font-sans overflow-hidden select-none">
       
-      {/* Sidebar - Hidden on mobile */}
+      {/* Sidebar - Desktop Only */}
       <aside className="hidden lg:flex w-64 bg-white border-r border-slate-100 flex-col shrink-0">
         <div className="p-6 flex items-center gap-3 border-b border-slate-50">
           <div className="w-10 h-10 bg-[#d1a398] rounded-xl flex items-center justify-center shadow-lg shadow-rose-100">
@@ -150,52 +149,49 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-grow flex flex-col overflow-hidden pb-16 lg:pb-0">
-        <header className="h-16 lg:h-20 bg-white/80 backdrop-blur-md border-b border-slate-50 flex items-center justify-between px-4 lg:px-8 shrink-0 z-10">
+      {/* Main Content Area */}
+      <main className="flex-grow flex flex-col overflow-hidden">
+        {/* Universal Header */}
+        <header className="h-16 lg:h-20 bg-white/95 backdrop-blur-md border-b border-slate-50 flex items-center justify-between px-4 lg:px-8 shrink-0 z-10 sticky top-0">
           <div className="flex items-center gap-1">
-            <button onClick={() => setCurrentMonth(m => (m > 0 ? m - 1 : 11))} className="p-2 hover:bg-slate-50 rounded-full text-slate-400"><ChevronLeft size={20} /></button>
+            <button onClick={() => setCurrentMonth(m => (m > 0 ? m - 1 : 11))} className="p-2 hover:bg-slate-50 active:bg-slate-100 rounded-full text-slate-400 transition-colors"><ChevronLeft size={24} /></button>
             <h2 className="text-base lg:text-lg font-bold w-32 lg:w-48 text-center text-slate-700">
               {MONTHS[currentMonth]} 2026
             </h2>
-            <button onClick={() => setCurrentMonth(m => (m < 11 ? m + 1 : 0))} className="p-2 hover:bg-slate-50 rounded-full text-slate-400"><ChevronRight size={20} /></button>
+            <button onClick={() => setCurrentMonth(m => (m < 11 ? m + 1 : 0))} className="p-2 hover:bg-slate-50 active:bg-slate-100 rounded-full text-slate-400 transition-colors"><ChevronRight size={24} /></button>
           </div>
           <button 
             onClick={handleAddTask}
-            className="flex items-center justify-center h-10 px-4 bg-[#7b9a95] text-white rounded-xl text-xs font-bold shadow-lg shadow-teal-50 hover:opacity-90 transition-all"
+            className="flex items-center justify-center h-10 px-4 bg-[#7b9a95] text-white rounded-xl text-xs font-bold shadow-lg shadow-teal-50 active:scale-95 transition-all"
           >
-            <Plus size={18} className="mr-1" /> Add Task
+            <Plus size={20} className="mr-1" /> New Task
           </button>
         </header>
 
-        <div className="flex-grow overflow-y-auto p-4 lg:p-8 scrollbar-hide">
+        <div className="flex-grow overflow-y-auto p-4 lg:p-8 scrollbar-hide pb-24 lg:pb-8">
           {currentView === 'Dashboard' ? (
-            <div className="max-w-xl mx-auto space-y-10 pb-20">
-              
-              {/* Section 1: Planning Overview */}
-              <section className="space-y-6">
+            /* Dashboard View (Remains similar but with better touch spacing) */
+            <div className="max-w-xl mx-auto space-y-12">
+              <section className="space-y-8">
                 <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
                   <Home size={18} className="text-[#7b9a95]" />
-                  <span>Monthly Plan Overview</span>
+                  <span>Monthly Overview</span>
                 </div>
-                
                 <div className="text-center space-y-1 py-4">
-                  <div className="text-[72px] font-light leading-none text-[#d1a398]">{stats.total}</div>
-                  <div className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Total Tasks</div>
+                  <div className="text-[80px] font-light leading-none text-[#d1a398]">{stats.total}</div>
+                  <div className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Total Planned</div>
                 </div>
-
-                <div className="space-y-4 px-2">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase">
+                <div className="space-y-6 px-2">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                       <span>Completion Rate</span>
                       <span>{stats.rate}%</span>
                     </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#7b9a95] transition-all duration-700" style={{ width: `${stats.rate}%` }}></div>
+                    <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#7b9a95] transition-all duration-700 ease-out" style={{ width: `${stats.rate}%` }}></div>
                     </div>
                   </div>
-
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-4 pt-2">
                     <StatBar label="Completed" value={stats.completed} total={stats.total} color="#d1a398" />
                     <StatBar label="In Progress" value={stats.inProgress} total={stats.total} color="#d1a398" />
                     <StatBar label="Not Started" value={stats.notStarted} total={stats.total} color="#d1a398" />
@@ -203,52 +199,46 @@ export default function App() {
                 </div>
               </section>
 
-              {/* Section 2: Calendar */}
-              <section className="space-y-6 pt-4">
+              <section className="space-y-8 pt-4">
                 <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
                   <Home size={18} className="text-[#7b9a95]" />
-                  <span>Monthly Calendar</span>
+                  <span>Interactive Calendar</span>
                 </div>
-                
                 <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="text-6xl font-light text-[#d1a398]">{currentMonth + 1}</div>
-                    <div className="text-xs font-bold text-slate-400 uppercase leading-tight">
-                      2026<br />{MONTHS[currentMonth]}
-                    </div>
+                    <div className="text-xs font-bold text-slate-400 uppercase leading-tight">2026<br />{MONTHS[currentMonth]}</div>
                   </div>
-
                   <div className="grid grid-cols-7 gap-y-2 text-center">
                     {['M','T','W','T','F','S','S'].map(d => (
                       <div key={d} className="text-[10px] font-bold text-[#d1a398] py-2 border-b border-rose-50 mb-2">{d}</div>
                     ))}
                     {calendarDays.map((day, i) => (
-                      <div key={i} className={`aspect-square flex items-center justify-center text-xs font-medium rounded-lg ${day ? (monthTasks.some(t => t.day === day) ? 'bg-[#d1a398]/10 text-[#d1a398] font-bold' : 'text-slate-400') : ''}`}>
+                      <div key={i} className={`aspect-square flex flex-col items-center justify-center text-xs font-medium rounded-xl transition-colors ${day ? (monthTasks.some(t => t.day === day) ? 'bg-[#d1a398]/10 text-[#d1a398] font-bold' : 'text-slate-400') : ''}`}>
                         {day}
+                        {day && monthTasks.some(t => t.day === day && t.status === TaskStatus.COMPLETED) && <div className="w-1 h-1 bg-emerald-400 rounded-full mt-0.5"></div>}
                       </div>
                     ))}
                   </div>
                 </div>
               </section>
 
-              {/* Section 3: Pending Tasks */}
-              <section className="space-y-6 pt-4">
+              <section className="space-y-8 pt-4">
                 <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
                   <Home size={18} className="text-[#7b9a95]" />
-                  <span>Monthly Pending Tasks</span>
+                  <span>Pending Tasks</span>
                 </div>
-                
-                <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm min-h-[200px]">
+                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
                   {pendingTasks.length > 0 ? (
                     <div className="divide-y divide-slate-50">
                       {pendingTasks.map((task, idx) => (
-                        <div key={task.id} className="flex items-start gap-4 p-4 hover:bg-slate-50 transition-colors">
-                          <span className="text-[10px] font-bold text-slate-300 w-4 pt-0.5">{idx + 1}</span>
+                        <div key={task.id} className="flex items-start gap-4 p-5 active:bg-slate-50 transition-colors">
+                          <span className="text-[10px] font-bold text-slate-300 w-4 pt-1">{idx + 1}</span>
                           <div className="flex-grow">
-                            <p className="text-sm font-medium text-slate-700">{task.title || 'Untitled Task'}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                               <span className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter">Day {task.day}</span>
-                               <span className={`text-[9px] font-bold uppercase tracking-tighter ${task.status === TaskStatus.IN_PROGRESS ? 'text-amber-500' : 'text-slate-300'}`}>
+                            <p className="text-sm font-semibold text-slate-700">{task.title || 'Untitled Task'}</p>
+                            <div className="flex items-center gap-3 mt-1.5">
+                               <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">Day {task.day}</span>
+                               <span className={`text-[10px] font-bold uppercase ${task.status === TaskStatus.IN_PROGRESS ? 'text-amber-500' : 'text-slate-300'}`}>
                                  {task.status.replace('-', ' ')}
                                </span>
                             </div>
@@ -257,36 +247,34 @@ export default function App() {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-12 text-center">
-                      <p className="text-xs text-slate-400 font-medium italic">All tasks completed or none scheduled.</p>
+                    <div className="p-16 text-center">
+                      <div className="w-12 h-12 bg-emerald-50 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4"><Check size={24} /></div>
+                      <p className="text-xs text-slate-400 font-medium italic">Your schedule is clear for now!</p>
                     </div>
                   )}
                 </div>
               </section>
 
-              {/* Section 4: Monthly Review */}
-              <section className="space-y-6 pt-4">
+              <section className="space-y-8 pt-4 pb-12">
                 <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
                   <Home size={18} className="text-[#7b9a95]" />
-                  <span>Monthly Review</span>
+                  <span>Monthly Reflections</span>
                 </div>
-                
-                <div className="bg-white rounded-xl border border-rose-100 p-6 space-y-6 shadow-sm">
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 border-l-2 border-[#d1a398] pl-2 uppercase tracking-wider">Month Achievements:</h4>
+                <div className="bg-white rounded-2xl border border-rose-100 p-6 space-y-8 shadow-sm">
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-slate-800 border-l-2 border-[#d1a398] pl-3 uppercase tracking-widest">Achievements</h4>
                     <textarea 
-                      className="w-full min-h-[100px] text-xs font-medium text-slate-600 bg-transparent border-none focus:ring-0 resize-none p-0 leading-relaxed placeholder:italic"
-                      placeholder="1、Completed project files...&#10;2、Launched new initiative..."
+                      className="w-full min-h-[140px] text-sm font-medium text-slate-600 bg-slate-50/30 rounded-xl border-none focus:ring-2 focus:ring-[#d1a398]/20 resize-none p-4 leading-relaxed placeholder:italic transition-all"
+                      placeholder="What went well this month? List your wins here..."
                       value={reviews[currentMonth]?.achievements || ''}
                       onChange={(e) => updateReview('achievements', e.target.value)}
                     />
                   </div>
-                  
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800 border-l-2 border-[#d1a398] pl-2 uppercase tracking-wider">Next Month Plan:</h4>
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-slate-800 border-l-2 border-[#d1a398] pl-3 uppercase tracking-widest">Next Month's Focus</h4>
                     <textarea 
-                      className="w-full min-h-[80px] text-xs font-medium text-slate-600 bg-transparent border-none focus:ring-0 resize-none p-0 leading-relaxed placeholder:italic"
-                      placeholder="1、Deep dive review...&#10;2、Add 3 new channels..."
+                      className="w-full min-h-[100px] text-sm font-medium text-slate-600 bg-slate-50/30 rounded-xl border-none focus:ring-2 focus:ring-[#d1a398]/20 resize-none p-4 leading-relaxed placeholder:italic transition-all"
+                      placeholder="Top priorities for next month..."
                       value={reviews[currentMonth]?.nextPlan || ''}
                       onChange={(e) => updateReview('nextPlan', e.target.value)}
                     />
@@ -295,30 +283,39 @@ export default function App() {
               </section>
             </div>
           ) : (
-            /* Task Entry View - Simplified Grid */
-            <div className="max-w-4xl mx-auto space-y-4">
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50/50">
-                    <tr className="text-[10px] font-bold text-slate-400 uppercase border-b border-slate-50">
-                      <th className="px-6 py-4 w-20">Day</th>
-                      <th className="px-6 py-4">Task Description</th>
-                      <th className="px-6 py-4 w-32">Status</th>
-                      <th className="px-6 py-4 w-20 text-center">Action</th>
+            /* Task Data Entry View */
+            <div className="max-w-4xl mx-auto">
+              {/* Desktop Table - Hidden on small screens */}
+              <div className="hidden lg:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-50/80">
+                    <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                      <th className="px-6 py-5 w-24">Day</th>
+                      <th className="px-6 py-5">Task Description</th>
+                      <th className="px-6 py-5 w-40">Status</th>
+                      <th className="px-6 py-5 w-24 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {monthTasks.map(task => (
                       <tr key={task.id} className="hover:bg-slate-50/30 transition-colors">
                         <td className="px-6 py-4">
-                          <input type="number" min="1" max="31" className="w-full bg-transparent border-none text-sm font-bold text-slate-500 focus:ring-0" value={task.day} onChange={e => handleUpdateTask(task.id, { day: parseInt(e.target.value) || 1 })} />
+                          <select 
+                            className="w-full bg-slate-50/50 rounded-lg border-none text-sm font-bold text-slate-500 focus:ring-2 focus:ring-[#d1a398]/20 py-2"
+                            value={task.day} 
+                            onChange={e => handleUpdateTask(task.id, { day: parseInt(e.target.value) })}
+                          >
+                            {Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1).map(d => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-6 py-4">
-                          <input type="text" placeholder="What needs to be done?" className="w-full bg-transparent border-none text-sm font-medium text-slate-700 focus:ring-0" value={task.title} onChange={e => handleUpdateTask(task.id, { title: e.target.value })} />
+                          <input type="text" placeholder="Task title..." className="w-full bg-transparent border-none text-sm font-semibold text-slate-700 focus:ring-0 placeholder:font-normal" value={task.title} onChange={e => handleUpdateTask(task.id, { title: e.target.value })} />
                         </td>
                         <td className="px-6 py-4">
                           <select 
-                            className={`w-full bg-transparent border-none text-[10px] font-bold uppercase focus:ring-0 cursor-pointer ${task.status === TaskStatus.COMPLETED ? 'text-emerald-500' : 'text-amber-500'}`} 
+                            className={`w-full bg-slate-50/50 rounded-lg border-none text-[11px] font-bold uppercase focus:ring-2 focus:ring-[#d1a398]/20 py-2 cursor-pointer ${task.status === TaskStatus.COMPLETED ? 'text-emerald-500' : task.status === TaskStatus.IN_PROGRESS ? 'text-amber-500' : 'text-slate-400'}`} 
                             value={task.status} 
                             onChange={e => handleUpdateTask(task.id, { status: e.target.value as TaskStatus })}
                           >
@@ -326,28 +323,84 @@ export default function App() {
                           </select>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <button onClick={() => handleDeleteTask(task.id)} className="text-slate-300 hover:text-rose-400 p-1"><Trash2 size={16} /></button>
+                          <button onClick={() => handleDeleteTask(task.id)} className="text-slate-300 hover:text-rose-400 p-2 transition-colors"><Trash2 size={18} /></button>
                         </td>
                       </tr>
                     ))}
-                    {monthTasks.length === 0 && (
-                      <tr><td colSpan={4} className="p-20 text-center text-slate-400 text-sm italic">No tasks for this month yet.</td></tr>
-                    )}
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile Card List - Visible only on small screens */}
+              <div className="lg:hidden space-y-4">
+                {monthTasks.map(task => (
+                  <div key={task.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Day</span>
+                        <select 
+                          className="bg-[#d1a398]/5 border-none rounded-lg text-lg font-bold text-[#d1a398] py-1 px-4 focus:ring-0 active:scale-95 transition-transform"
+                          value={task.day}
+                          onChange={e => handleUpdateTask(task.id, { day: parseInt(e.target.value) })}
+                        >
+                          {Array.from({ length: daysInCurrentMonth }, (_, i) => i + 1).map(d => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button onClick={() => handleDeleteTask(task.id)} className="p-2 text-rose-300 hover:text-rose-500 active:scale-90 transition-all">
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                    
+                    <textarea 
+                      className="w-full bg-slate-50/30 border-none rounded-xl text-sm font-semibold text-slate-700 p-4 focus:ring-2 focus:ring-[#d1a398]/10 placeholder:font-normal placeholder:text-slate-300 min-h-[80px]"
+                      placeholder="Describe your task..."
+                      value={task.title}
+                      onChange={e => handleUpdateTask(task.id, { title: e.target.value })}
+                    />
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase w-12 shrink-0">Status</span>
+                      <select 
+                        className={`flex-grow bg-slate-50/80 border-none rounded-xl text-[12px] font-bold uppercase py-3 px-4 focus:ring-0 active:scale-95 transition-transform ${task.status === TaskStatus.COMPLETED ? 'text-emerald-500' : task.status === TaskStatus.IN_PROGRESS ? 'text-amber-500' : 'text-slate-500'}`}
+                        value={task.status}
+                        onChange={e => handleUpdateTask(task.id, { status: e.target.value as TaskStatus })}
+                      >
+                        {Object.values(TaskStatus).map(s => <option key={s} value={s}>{s.replace('-', ' ')}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {monthTasks.length === 0 && (
+                <div className="p-20 text-center text-slate-400 text-sm italic bg-white rounded-2xl border border-dashed border-slate-200">
+                  Tap "New Task" above to start planning {MONTHS[currentMonth]}.
+                </div>
+              )}
             </div>
           )}
         </div>
       </main>
 
-      {/* Mobile Nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-50 h-16 flex items-center justify-around z-50">
-        <button onClick={() => setCurrentView('Dashboard')} className={`flex flex-col items-center gap-1 ${currentView === 'Dashboard' ? 'text-[#d1a398]' : 'text-slate-300'}`}>
-          <LayoutDashboard size={20} /><span className="text-[9px] font-bold uppercase tracking-tighter">Report</span>
+      {/* Mobile Sticky Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 h-20 px-6 flex items-center justify-between z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+        <button 
+          onClick={() => setCurrentView('Dashboard')} 
+          className={`flex flex-col items-center justify-center gap-1.5 w-24 h-full transition-all ${currentView === 'Dashboard' ? 'text-[#d1a398]' : 'text-slate-300'}`}
+        >
+          <LayoutDashboard size={24} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Report</span>
+          {currentView === 'Dashboard' && <div className="w-1.5 h-1.5 bg-[#d1a398] rounded-full mt-0.5"></div>}
         </button>
-        <button onClick={() => setCurrentView('Tasks')} className={`flex flex-col items-center gap-1 ${currentView === 'Tasks' ? 'text-[#d1a398]' : 'text-slate-300'}`}>
-          <ClipboardList size={20} /><span className="text-[9px] font-bold uppercase tracking-tighter">Data Entry</span>
+        <button 
+          onClick={() => setCurrentView('Tasks')} 
+          className={`flex flex-col items-center justify-center gap-1.5 w-24 h-full transition-all ${currentView === 'Tasks' ? 'text-[#d1a398]' : 'text-slate-300'}`}
+        >
+          <ClipboardList size={24} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Entry</span>
+          {currentView === 'Tasks' && <div className="w-1.5 h-1.5 bg-[#d1a398] rounded-full mt-0.5"></div>}
         </button>
       </nav>
     </div>
@@ -356,7 +409,7 @@ export default function App() {
 
 function NavButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-[#d1a398] text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all duration-200 ${active ? 'bg-[#d1a398] text-white shadow-xl shadow-rose-100 scale-[1.02]' : 'text-slate-400 hover:bg-slate-50'}`}>
       {icon} <span className="font-bold text-sm">{label}</span>
     </button>
   );
@@ -366,11 +419,11 @@ function StatBar({ label, value, total, color }: { label: string, value: number,
   const width = total > 0 ? (value / total) * 100 : 0;
   return (
     <div className="flex items-center gap-4">
-      <span className="text-[10px] font-bold text-slate-500 w-16 uppercase">{label}</span>
-      <div className="flex-grow h-4 bg-slate-50 rounded-sm relative overflow-hidden">
-        <div className="h-full transition-all duration-1000" style={{ width: `${width}%`, backgroundColor: color, opacity: 0.6 }}></div>
+      <span className="text-[10px] font-bold text-slate-400 w-20 uppercase tracking-tighter">{label}</span>
+      <div className="flex-grow h-5 bg-slate-50 rounded-lg relative overflow-hidden">
+        <div className="h-full transition-all duration-1000 ease-in-out" style={{ width: `${width}%`, backgroundColor: color, opacity: 0.65 }}></div>
       </div>
-      <span className="text-[10px] font-bold text-slate-500 w-6 text-right">{value}</span>
+      <span className="text-[11px] font-bold text-slate-500 w-8 text-right font-mono">{value}</span>
     </div>
   );
 }
